@@ -3,8 +3,8 @@ let isAiming = false;
 let targetedTokens = [];
 let originalPositions = {};
 
-// Ícone SVG embutido em Base64 (Nunca vai falhar)
-const MENU_ICON = "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Cpath d='M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5zm0 2.18l7 3.89v4.93c0 4.27-2.61 8.27-7 9.38-4.39-1.11-7-5.11-7-9.38V8.07l7-3.89z'/%3E%3C/svg%3E";
+// Ícone do Grimório com a letra "M" (Vetor convertido para Data URI para nunca falhar)
+const MENU_ICON = "data:image/svg+xml;charset=utf-8,%3Csvg width='64' height='64' viewBox='0 0 64 64' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='8' y='6' width='48' height='52' rx='4' /%3E%3Cline x1='18' y1='6' x2='18' y2='58' /%3E%3Cline x1='8' y1='16' x2='18' y2='16' /%3E%3Cline x1='8' y1='48' x2='18' y2='48' /%3E%3Cpolyline points='26,42 26,24 36,34 46,24 46,42' /%3E%3C/svg%3E";
 
 OBR.onReady(() => {
     setupTabs();
@@ -14,15 +14,15 @@ OBR.onReady(() => {
     setupMovementTracker();
 });
 
-// CRIA O BOTÃO NO MENU DO TOKEN
+// CRIA O BOTÃO NO MENU DO TOKEN (Agora funciona em qualquer token/imagem)
 function setupContextMenu() {
     OBR.contextMenu.create({
         id: "com.fatesystem.add",
         icons: [{
             icon: MENU_ICON, 
-            label: "Add to Fate Matriz",
+            label: "Fate: Adicionar à Matriz",
             filter: {
-                every: [{ key: "layer", value: "CHARACTER" }]
+                every: [{ key: "type", value: "IMAGE" }] // <- O segredo: aceita qualquer imagem no mapa
             }
         }],
         onClick: async (context) => {
@@ -64,7 +64,7 @@ async function renderTrackerList() {
     if (document.activeElement && document.activeElement.classList.contains('stat-input')) return; 
 
     const container = document.getElementById('tokenTrackerList');
-    const items = await OBR.scene.items.getItems(item => item.layer === "CHARACTER" && item.metadata[FATE_ID]);
+    const items = await OBR.scene.items.getItems(item => item.metadata[FATE_ID] !== undefined);
 
     if (items.length === 0) {
         container.innerHTML = '<p style="text-align: center; color: var(--text-muted); font-size: 12px; margin-top: 20px;">Nenhum personagem na Matriz.</p>';
@@ -190,7 +190,8 @@ function setupSpells() {
         if (isAiming && player.selection.length > 0) {
             const items = await OBR.scene.items.getItems(player.selection);
             items.forEach(item => {
-                if (item.layer === "CHARACTER" && !targetedTokens.find(t => t.id === item.id)) {
+                // Remove a trava de character aqui também para a mira funcionar em props se quiser
+                if (!targetedTokens.find(t => t.id === item.id)) {
                     targetedTokens.push({ id: item.id, name: item.name || "Alvo" });
                 }
             });
@@ -270,7 +271,8 @@ function setupMovementTracker() {
         const scale = await OBR.scene.grid.getScale(); 
         
         items.forEach(async item => {
-            if (originalPositions[item.id] && item.layer === "CHARACTER") {
+            // Removemos a checagem de CHARACTER para o limitador também se aplicar a tudo
+            if (originalPositions[item.id]) {
                 const orig = originalPositions[item.id];
                 const distPx = Math.sqrt(Math.pow(item.x - orig.x, 2) + Math.pow(item.y - orig.y, 2));
                 const distFt = (distPx / dpi) * scale.parsed.multiplier;
