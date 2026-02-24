@@ -1,0 +1,157 @@
+:root {
+    --bg-dark: #121212;
+    --bg-panel: rgba(24, 24, 28, 0.95);
+    --accent: #9d4edd; /* Roxo vibrante */
+    --text-main: #e0e0e0;
+    --text-muted: #888;
+    --border-color: #333;
+    --danger: #ff4d4d;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 10px;
+    height: 100vh;
+    box-sizing: border-box;
+    overflow-y: hidden;
+}
+
+/* Navegação de Abas */
+.tabs {
+    display: flex;
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 15px;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+}
+
+.tab-btn:hover {
+    color: var(--text-main);
+}
+
+.tab-btn.active {
+    color: var(--accent);
+    border-bottom: 2px solid var(--accent);
+    margin-bottom: -2px; /* Sobrepõe a borda inferior */
+}
+
+.tab-content {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Elementos de Interface */
+input, textarea, button {
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+    padding: 10px;
+    background-color: #1e1e24;
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    border-radius: 4px;
+}
+
+input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 5px rgba(157, 78, 221, 0.5);
+}
+
+button {
+    background-color: var(--accent);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    transition: background 0.2s;
+}
+
+button:hover {
+    background-color: #7b2cbf;
+}
+
+/* Estilo Janela de Resultado (Log de Combate) */
+.log-overlay {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    z-index: 100;
+}
+
+.log-overlay.hidden {
+    display: none;
+}
+
+.log-box {
+    background: linear-gradient(180deg, rgba(20,20,25,0.9) 0%, rgba(10,10,12,0.95) 100%);
+    border: 1px solid var(--accent);
+    border-top: 3px solid var(--accent);
+    border-radius: 4px;
+    padding: 15px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.8);
+}
+
+.log-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+}
+
+.log-title {
+    font-weight: bold;
+    color: var(--accent);
+    letter-spacing: 1px;
+}
+
+.close-btn {
+    background: none;
+    width: auto;
+    padding: 0 5px;
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 18px;
+}
+
+.close-btn:hover {
+    color: var(--danger);
+    background: none;
+}
+
+.log-entry {
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 8px;
+    border-left: 3px solid var(--danger);
+    padding-left: 10px;
+}
+
+.highlight-token { color: #ffba08; font-weight: bold; }
+.highlight-damage { color: var(--danger); font-weight: bold; }
+.highlight-skill { color: var(--accent); font-style: italic; }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
