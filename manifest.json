@@ -1,13 +1,13 @@
 {
   "name": "Fate System",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "manifest_version": 1,
   "description": "Sistema de Turnos, Status e Movimento",
-  "icon": "icon.svg",
+  "icon": "https://seediam.github.io/Fate_Sytem/icon.svg",
   "action": {
     "title": "Fate System",
-    "icon": "icon.svg",
-    "popover": "index.html",
+    "icon": "https://seediam.github.io/Fate_Sytem/icon.svg",
+    "popover": "https://seediam.github.io/Fate_Sytem/index.html",
     "width": 450,
     "height": 600
   }
