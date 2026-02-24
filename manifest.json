@@ -1,13 +1,13 @@
 {
   "name": "Fate System",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "manifest_version": 1,
   "description": "Sistema HUD e Matriz",
-  "icon": "icon.svg",
+  "icon": "https://seediam.github.io/Fate_Sytem/icon.svg",
   "action": {
     "title": "Fate System",
-    "icon": "icon.svg",
-    "popover": "https://github.com/Seediam/Fate_Sytem/blob/main/index.html",
+    "icon": "https://seediam.github.io/Fate_Sytem/icon.svg",
+    "popover": "https://seediam.github.io/Fate_Sytem/index.html",
     "width": 400,
     "height": 600
   }
