@@ -1,6 +1,4 @@
 const FATE_ID = "com.fatesystem.metadata";
-// URL Absoluta: Isso GARANTE que o Owlbear consiga carregar a imagem do menu.
-const MENU_ICON = "https://seediam.github.io/Fate_Sytem/icon.svg"; 
 
 let originalPositions = {};
 
@@ -13,20 +11,20 @@ OBR.onReady(() => {
 
 // === 1. CRIAR MENU NO TOKEN ===
 function setupContextMenu() {
+    // Mudei o ID do botão para enganar o cache do Owlbear
     OBR.contextMenu.create({
-        id: "com.fatesystem.add",
+        id: "com.fatesystem.add.v3", 
         icons: [{
-            icon: MENU_ICON, 
-            label: "Adicionar ao Fate (Turnos)",
+            icon: "https://seediam.github.io/Fate_Sytem/icon.svg", 
+            label: "Adicionar à Matriz (Fate)",
             filter: {
-                every: [{ key: "type", value: "IMAGE" }] // Funciona em qualquer token/imagem
+                every: [{ key: "layer", value: "CHARACTER" }] // Filtro seguro padrao
             }
         }],
         onClick: async (context) => {
             const items = context.items;
             await OBR.scene.items.updateItems(items, (tokens) => {
                 tokens.forEach(t => {
-                    // Adicionamos o "movimento" (FT) aos dados do token
                     if (!t.metadata[FATE_ID]) {
                         t.metadata[FATE_ID] = { hpAtual: 100, hpMax: 100, mpAtual: 50, mpMax: 50, movimento: 0 };
                     }
@@ -51,6 +49,24 @@ function setupTabs() {
 
 // === 3. RENDERIZAR E ATUALIZAR TOKENS ===
 function setupTurnos() {
+    // PLANO B: Botão [+] na aba Turnos
+    document.getElementById('fallbackAddBtn').addEventListener('click', async () => {
+        const selection = await OBR.player.getSelection();
+        if (!selection || selection.length === 0) {
+            alert("Selecione um personagem no mapa primeiro!");
+            return;
+        }
+        const items = await OBR.scene.items.getItems(selection);
+        await OBR.scene.items.updateItems(items, (tokens) => {
+            tokens.forEach(t => {
+                if (!t.metadata[FATE_ID]) {
+                    t.metadata[FATE_ID] = { hpAtual: 100, hpMax: 100, mpAtual: 50, mpMax: 50, movimento: 0 };
+                }
+            });
+        });
+        renderTrackerList();
+    });
+
     OBR.scene.items.onChange(() => {
         setTimeout(renderTrackerList, 150); 
     });
@@ -58,11 +74,9 @@ function setupTurnos() {
 }
 
 async function renderTrackerList() {
-    // Evita piscar a tela se estiver digitando
     if (document.activeElement && (document.activeElement.classList.contains('stat-input') || document.activeElement.classList.contains('ft-input'))) return; 
 
     const container = document.getElementById('tokenTrackerList');
-    // Busca todos os itens que têm os dados do nosso sistema
     const items = await OBR.scene.items.getItems(item => item.metadata[FATE_ID] !== undefined);
 
     if (items.length === 0) {
@@ -103,7 +117,6 @@ async function renderTrackerList() {
 }
 
 function attachMatrizEvents() {
-    // Evento de apertar ENTER nos Status ou no FT
     document.querySelectorAll('.stat-input, .ft-input').forEach(input => {
         input.addEventListener('keypress', async (e) => {
             if (e.key === 'Enter') {
@@ -119,7 +132,6 @@ function attachMatrizEvents() {
                 const tokens = await OBR.scene.items.getItems([tokenId]);
                 let meta = tokens[0].metadata[FATE_ID];
 
-                // Permite usar +20 ou -30
                 if (val.startsWith('-') || val.startsWith('+')) {
                     let modifier = parseInt(val);
                     if (isHpAtual) val = meta.hpAtual + modifier;
@@ -132,7 +144,6 @@ function attachMatrizEvents() {
                     val = parseInt(val) || 0; 
                 }
 
-                // Salva no Owlbear
                 await OBR.scene.items.updateItems([tokenId], (t) => {
                     if (isHpAtual) t[0].metadata[FATE_ID].hpAtual = val;
                     if (isHpMax) t[0].metadata[FATE_ID].hpMax = val;
@@ -141,12 +152,11 @@ function attachMatrizEvents() {
                     if (isFt) t[0].metadata[FATE_ID].movimento = val;
                 });
                 
-                e.target.blur(); // Tira o foco do input
+                e.target.blur(); 
             }
         });
     });
 
-    // Botão de remover o Token da lista
     document.querySelectorAll('.remove-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             const tokenId = e.target.dataset.id;
@@ -158,7 +168,6 @@ function attachMatrizEvents() {
 
 // === 4. SISTEMA DE BLOQUEIO DE MOVIMENTO (INDIVIDUAL) ===
 function setupMovementTracker() {
-    // Salva a posição original do token quando o jogador clica para arrastar
     OBR.player.onChange(async (player) => {
         if(player.selection.length > 0) {
             const items = await OBR.scene.items.getItems(player.selection);
@@ -166,24 +175,20 @@ function setupMovementTracker() {
         }
     });
 
-    // Monitora o movimento
     OBR.scene.items.onChange(async (items) => {
         const dpi = await OBR.scene.grid.getDpi(); 
         const scale = await OBR.scene.grid.getScale(); 
         
         items.forEach(async item => {
-            // Verifica se o item tem FATE_ID e se ele tem posição registrada
             if (item.metadata[FATE_ID] && originalPositions[item.id]) {
                 const limit = parseInt(item.metadata[FATE_ID].movimento) || 0;
                 
-                // Se for 0, o token anda livremente
                 if (limit === 0) return; 
 
                 const orig = originalPositions[item.id];
                 const distPx = Math.sqrt(Math.pow(item.x - orig.x, 2) + Math.pow(item.y - orig.y, 2));
                 const distFt = (distPx / dpi) * scale.parsed.multiplier;
 
-                // Se a distância for maior que o limite (FT) dele, volta pro lugar
                 if (distFt > limit) {
                     await OBR.scene.items.updateItems([item.id], t => { 
                         t[0].x = orig.x; 
