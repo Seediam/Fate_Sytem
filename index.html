@@ -15,22 +15,17 @@
     </div>
 
     <div id="matriz" class="tab-content active">
-        <button id="registerTokenBtn" class="primary-btn">Vincular Token Selecionado</button>
-        <h4 id="activeTokenName" class="token-name">Nenhum Token Selecionado</h4>
+        <p style="font-size: 11px; color: #888; text-align: center; margin-top: 0;">
+            Dica: Para adicionar um token aqui, clique nele no mapa e use o ícone do Fate System no menu dele.
+        </p>
         
         <div class="panel">
             <label>Limite de Movimento (Ft.) | 0 = Livre</label>
             <input type="number" id="moveLimit" value="0">
         </div>
 
-        <div class="panel" id="hudPanel">
-            <label>HP (Ex: 100/100, ou digite -30 para subtrair)</label>
-            <input type="text" id="hpInput" placeholder="HP">
-            
-            <label>Mana (Ex: 50/50)</label>
-            <input type="text" id="manaInput" placeholder="Mana">
-            
-            <button id="updateHudBtn" class="secondary-btn">Atualizar HUD no Mapa</button>
+        <div id="tokenTrackerList" class="tracker-list">
+            <p style="text-align: center; color: #888; font-size: 12px;">Nenhum token na Matriz.</p>
         </div>
     </div>
 
@@ -43,9 +38,9 @@
             <input type="text" id="baseDice" placeholder="Dado Base (ex: 3d6)">
             
             <div class="runes-section">
-                <p>Runas (Opcional):</p>
+                <p style="color: #aaa; font-size: 12px; font-weight: bold; margin-bottom: 5px;">Runas (Opcional):</p>
                 <div class="rune-slot">
-                    <select id="rune1Type">
+                    <select id="rune1Type" class="rune-select">
                         <option value="none">Nenhuma</option>
                         <option value="force">Força δ (Vermelho)</option>
                         <option value="magic">Magia α (Azul)</option>
@@ -53,7 +48,7 @@
                     <input type="text" id="rune1Dice" placeholder="Dado (ex: 1d4)">
                 </div>
                 <div class="rune-slot">
-                    <select id="rune2Type">
+                    <select id="rune2Type" class="rune-select">
                         <option value="none">Nenhuma</option>
                         <option value="force">Força δ (Vermelho)</option>
                         <option value="magic">Magia α (Azul)</option>
@@ -61,7 +56,7 @@
                     <input type="text" id="rune2Dice" placeholder="Dado (ex: 1d4)">
                 </div>
                 <div class="rune-slot">
-                    <select id="rune3Type">
+                    <select id="rune3Type" class="rune-select">
                         <option value="none">Nenhuma</option>
                         <option value="force">Força δ (Vermelho)</option>
                         <option value="magic">Magia α (Azul)</option>
@@ -79,11 +74,11 @@
         <div class="panel">
             <label class="checkbox-label">
                 <input type="checkbox" id="autoKillToggle" checked>
-                Marcar com "X" ao chegar a 0 HP
+                Marcar com "❌" ao chegar a 0 HP
             </label>
             <label class="checkbox-label">
                 <input type="checkbox" id="gmOnlyHudToggle">
-                HUD Visível Apenas para o Mestre
+                HUD no Mapa Visível Apenas para o Mestre
             </label>
         </div>
     </div>
@@ -98,6 +93,6 @@
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
