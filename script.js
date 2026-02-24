@@ -1,111 +1,334 @@
-// Substitua o setupMatriz atual por este:
+const FATE_ID = "com.fatesystem.metadata";
+let isAiming = false;
+let targetedTokens = [];
+let originalPositions = {};
 
-function setupMatriz() {
-    const regBtn = document.getElementById('registerTokenBtn');
-    
-    // Botão para registrar token selecionado na Matriz
-    regBtn.addEventListener('click', async () => {
-        const selection = await OBR.player.getSelection();
-        if (!selection || selection.length === 0) return alert("Selecione tokens no mapa primeiro!");
-        
-        const items = await OBR.scene.items.getItems(selection);
-        
-        // Adiciona a tag FATE_ID em todos os selecionados
-        await OBR.scene.items.updateItems(selection, (tokens) => {
-            tokens.forEach(t => {
-                if (!t.metadata[FATE_ID]) {
-                    t.metadata[FATE_ID] = { hp: "100/100", mana: "50/50" };
-                }
+OBR.onReady(() => {
+    setupTabs();
+    setupContextMenu(); // NOVO: Cria o botão no menu do token
+    setupMatriz();
+    setupSpells();
+    setupMovementTracker();
+});
+
+// --- MENU DE CONTEXTO (Igual ao Owl Trackers) ---
+function setupContextMenu() {
+    OBR.contextMenu.create({
+        id: "com.fatesystem.bind",
+        icons: [{
+            icon: "icon.svg", // O Owlbear vai puxar o ícone da sua pasta
+            label: "Adicionar à Matriz (Fate)",
+            filter: {
+                every: [{ key: "layer", value: "CHARACTER" }]
+            }
+        }],
+        onClick: async (context) => {
+            const items = context.items;
+            await OBR.scene.items.updateItems(items, (tokens) => {
+                tokens.forEach(t => {
+                    // Estrutura nova, separando atual e máximo
+                    if (!t.metadata[FATE_ID]) {
+                        t.metadata[FATE_ID] = { hpAtual: 100, hpMax: 100, mpAtual: 50, mpMax: 50 };
+                    }
+                });
             });
-        });
+            OBR.notification.show("Token adicionado à Matriz!");
+            renderTrackerList(); // Atualiza a aba principal
+        }
     });
+}
 
-    // Escuta mudanças na cena para atualizar a lista em tempo real para todos
-    OBR.scene.items.onChange(async (items) => {
-        renderTrackerList();
+// --- CONTROLE DE ABAS ---
+function setupTabs() {
+    const btns = document.querySelectorAll('.tab-btn');
+    const contents = document.querySelectorAll('.tab-content');
+    btns.forEach(btn => btn.addEventListener('click', () => {
+        btns.forEach(b => b.classList.remove('active'));
+        contents.forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+    }));
+    document.getElementById('closeLogBtn').addEventListener('click', () => {
+        document.getElementById('combatLogOverlay').classList.add('hidden');
     });
+}
 
-    // Renderiza a lista na primeira vez que abre
+// --- SISTEMA DA MATRIZ (Tempo Real) ---
+function setupMatriz() {
+    OBR.scene.items.onChange(() => {
+        setTimeout(renderTrackerList, 100); 
+    });
     renderTrackerList();
 }
 
-// Função que cria a lista visual de todos os tokens registrados
 async function renderTrackerList() {
-    const trackerContainer = document.getElementById('tokenTrackerList');
-    
-    // Pega todos os itens da cena que são personagens e têm a metadata do nosso sistema
-    const items = await OBR.scene.items.getItems((item) => {
-        return item.layer === "CHARACTER" && item.metadata[FATE_ID] !== undefined;
-    });
+    // Evita recarregar a lista se o usuário estiver digitando
+    if (document.activeElement && document.activeElement.classList.contains('stat-input')) {
+        return; 
+    }
 
-    trackerContainer.innerHTML = ''; // Limpa a lista
+    const container = document.getElementById('tokenTrackerList');
+    const items = await OBR.scene.items.getItems(item => item.layer === "CHARACTER" && item.metadata[FATE_ID]);
 
     if (items.length === 0) {
-        trackerContainer.innerHTML = '<p style="font-size:12px; color:#888; text-align:center;">Nenhum token na Matriz.</p>';
+        container.innerHTML = '<p style="text-align: center; color: #888; font-size: 12px;">Nenhum token na Matriz.</p>';
         return;
     }
 
+    let html = '';
     items.forEach(item => {
         const meta = item.metadata[FATE_ID];
-        const imageUrl = item.image ? item.image.url : ''; // Pega a imagem do token
+        const img = item.image ? item.image.url : '';
+        html += `
+            <div class="tracker-item" id="tracker-${item.id}">
+                <img src="${img}" class="tracker-img">
+                <div class="tracker-info">
+                    <div class="tracker-name">${item.name || "Desconhecido"}</div>
+                    
+                    <div class="stats-row">
+                        <span class="stat-label" style="color:var(--danger)">HP</span>
+                        <input type="text" value="${meta.hpAtual}" class="stat-input hp-atual" data-id="${item.id}" title="Digite -X para dano">
+                        <span class="stat-divider">/</span>
+                        <input type="text" value="${meta.hpMax}" class="stat-input hp-max" data-id="${item.id}">
+                    </div>
+                    
+                    <div class="stats-row">
+                        <span class="stat-label" style="color:var(--magic)">MP</span>
+                        <input type="text" value="${meta.mpAtual}" class="stat-input mp-atual" data-id="${item.id}">
+                        <span class="stat-divider">/</span>
+                        <input type="text" value="${meta.mpMax}" class="stat-input mp-max" data-id="${item.id}">
+                    </div>
 
-        const div = document.createElement('div');
-        div.className = 'tracker-item';
-        div.innerHTML = `
-            <img src="${imageUrl}" class="tracker-img" alt="Token">
-            <div class="tracker-info">
-                <span class="tracker-name">${item.name || "Desconhecido"}</span>
-                <div class="tracker-stats">
-                    <span>HP</span>
-                    <input type="text" value="${meta.hp}" class="hp-track" data-id="${item.id}" title="Aperte Enter para calcular (-30 ou +20)">
-                    <span>MP</span>
-                    <input type="text" value="${meta.mana}" class="mp-track" data-id="${item.id}">
                 </div>
+                <button class="remove-btn" data-id="${item.id}" title="Remover">X</button>
             </div>
-            <button class="remove-btn" data-id="${item.id}" title="Remover da Matriz">X</button>
         `;
-        trackerContainer.appendChild(div);
     });
+    
+    container.innerHTML = html;
+    attachMatrizEvents();
+}
 
-    // Adiciona os eventos de edição (Apertar Enter no HP/Mana)
-    document.querySelectorAll('.hp-track, .mp-track').forEach(input => {
+function attachMatrizEvents() {
+    // Escuta o "Enter" em qualquer um dos 4 inputs (HP Atual, HP Max, MP Atual, MP Max)
+    document.querySelectorAll('.stat-input').forEach(input => {
         input.addEventListener('keypress', async (e) => {
             if (e.key === 'Enter') {
-                const tokenId = e.target.getAttribute('data-id');
-                const isHp = e.target.classList.contains('hp-track');
+                const tokenId = e.target.dataset.id;
                 let val = e.target.value.trim();
+                
+                const isHpAtual = e.target.classList.contains('hp-atual');
+                const isHpMax = e.target.classList.contains('hp-max');
+                const isMpAtual = e.target.classList.contains('mp-atual');
+                const isMpMax = e.target.classList.contains('mp-max');
 
                 const tokens = await OBR.scene.items.getItems([tokenId]);
-                let currentMeta = tokens[0].metadata[FATE_ID];
-                let baseVal = isHp ? currentMeta.hp : currentMeta.mana;
+                let meta = tokens[0].metadata[FATE_ID];
 
+                // Lógica de cálculo matemático (ex: se digitar "-30" no HP atual)
                 if (val.startsWith('-') || val.startsWith('+')) {
-                    let [atual, max] = baseVal.split('/').map(Number);
-                    atual += parseInt(val);
-                    val = `${atual}/${max}`;
+                    let modifier = parseInt(val);
+                    if (isHpAtual) val = meta.hpAtual + modifier;
+                    if (isHpMax) val = meta.hpMax + modifier;
+                    if (isMpAtual) val = meta.mpAtual + modifier;
+                    if (isMpMax) val = meta.mpMax + modifier;
+                    e.target.value = val; // Atualiza o input visualmente
+                } else {
+                    val = parseInt(val) || 0; // Garante que seja um número
                 }
 
+                // Salva a nova informação nos metadados
                 await OBR.scene.items.updateItems([tokenId], (t) => {
-                    if (isHp) t[0].metadata[FATE_ID].hp = val;
-                    else t[0].metadata[FATE_ID].mana = val;
+                    if (isHpAtual) t[0].metadata[FATE_ID].hpAtual = val;
+                    if (isHpMax) t[0].metadata[FATE_ID].hpMax = val;
+                    if (isMpAtual) t[0].metadata[FATE_ID].mpAtual = val;
+                    if (isMpMax) t[0].metadata[FATE_ID].mpMax = val;
                 });
                 
-                updateVisualHUD(tokenId, isHp ? val : currentMeta.hp, isHp ? currentMeta.mana : val);
+                // Recarrega as variáveis para o HUD visual
+                const updatedMeta = (await OBR.scene.items.getItems([tokenId]))[0].metadata[FATE_ID];
+                updateVisualHUD(tokenId, updatedMeta.hpAtual, updatedMeta.hpMax, updatedMeta.mpAtual, updatedMeta.mpMax);
+                e.target.blur(); 
             }
         });
     });
 
-    // Botão de remover o token da lista
+    // Botão de remover
     document.querySelectorAll('.remove-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
-            const tokenId = e.target.getAttribute('data-id');
-            await OBR.scene.items.updateItems([tokenId], (t) => {
-                delete t[0].metadata[FATE_ID]; // Apaga os dados, tirando-o da lista
+            const tokenId = e.target.dataset.id;
+            await OBR.scene.items.updateItems([tokenId], t => delete t[0].metadata[FATE_ID]);
+            await OBR.scene.items.deleteItems([`${tokenId}-hud`]);
+            renderTrackerList();
+        });
+    });
+}
+
+async function updateVisualHUD(tokenId, hpAtual, hpMax, mpAtual, mpMax) {
+    const textId = `${tokenId}-hud`;
+    const existing = await OBR.scene.items.getItems([textId]);
+    const isGmOnly = document.getElementById('gmOnlyHudToggle').checked;
+    const role = await OBR.player.getRole();
+    const textContent = `HP: ${hpAtual}/${hpMax} | MP: ${mpAtual}/${mpMax}`;
+
+    if (existing.length > 0) {
+        await OBR.scene.items.updateItems([textId], items => {
+            items[0].text.plainText = textContent;
+            items[0].visible = isGmOnly ? (role === "GM") : true;
+        });
+    } else {
+        const parent = await OBR.scene.items.getItems([tokenId]);
+        if(parent.length === 0) return;
+        const textItem = {
+            id: textId,
+            type: "TEXT",
+            text: { type: "PLAIN", plainText: textContent },
+            x: parent[0].x,
+            y: parent[0].y + (parent[0].image ? parent[0].image.height / 2 : 50),
+            attachedTo: tokenId,
+            locked: true,
+            layer: "TEXT",
+            visible: isGmOnly ? (role === "GM") : true
+        };
+        await OBR.scene.local.addItems([textItem]); 
+    }
+}
+
+// --- SISTEMA DE SPELLS E MIRA ---
+function setupSpells() {
+    const aimBtn = document.getElementById('aimBtn');
+    
+    aimBtn.addEventListener('click', () => {
+        isAiming = !isAiming;
+        aimBtn.innerText = isAiming ? "🛑 Parar Mira" : "🎯 Iniciar Mira";
+        aimBtn.classList.toggle('active', isAiming);
+        if(isAiming) targetedTokens = [];
+        updateTargetUI();
+    });
+
+    OBR.player.onChange(async (player) => {
+        if (isAiming && player.selection.length > 0) {
+            const items = await OBR.scene.items.getItems(player.selection);
+            items.forEach(item => {
+                if (item.layer === "CHARACTER" && !targetedTokens.find(t => t.id === item.id)) {
+                    targetedTokens.push({ id: item.id, name: item.name || "Alvo" });
+                }
             });
-            
-            // Remove o HUD de texto flutuante, se houver
-            const textId = `${tokenId}-hud`;
-            await OBR.scene.items.deleteItems([textId]);
+            updateTargetUI();
+            OBR.player.deselect(); 
+        }
+    });
+
+    document.getElementById('castSpellBtn').addEventListener('click', async () => {
+        if (targetedTokens.length === 0) return alert("Mire em pelo menos um alvo!");
+        
+        const skillName = document.getElementById('spellName').value || "Habilidade Desconhecida";
+        let totalDmg = rollDice(document.getElementById('baseDice').value);
+        
+        for(let i=1; i<=3; i++) {
+            const type = document.getElementById(`rune${i}Type`).value;
+            if(type !== "none") {
+                totalDmg += rollDice(document.getElementById(`rune${i}Dice`).value);
+            }
+        }
+
+        const autoKill = document.getElementById('autoKillToggle').checked;
+
+        for (const target of targetedTokens) {
+            const items = await OBR.scene.items.getItems([target.id]);
+            if(items.length > 0) {
+                let meta = items[0].metadata[FATE_ID] || { hpAtual: 0, hpMax: 0, mpAtual: 0, mpMax: 0 };
+                
+                // Aplica o dano no HP atual
+                meta.hpAtual -= totalDmg;
+                
+                await OBR.scene.items.updateItems([target.id], t => t[0].metadata[FATE_ID].hpAtual = meta.hpAtual);
+                updateVisualHUD(target.id, meta.hpAtual, meta.hpMax, meta.mpAtual, meta.mpMax);
+                logCombat(target.name, totalDmg, skillName);
+
+                if(meta.hpAtual <= 0 && autoKill) {
+                    const deathId = `${target.id}-death`;
+                    const existingDeath = await OBR.scene.items.getItems([deathId]);
+                    if(existingDeath.length === 0) {
+                        const deathMark = {
+                            id: deathId,
+                            type: "TEXT",
+                            text: { type: "PLAIN", plainText: "❌" },
+                            x: items[0].x, y: items[0].y,
+                            attachedTo: target.id,
+                            locked: true, layer: "DRAWING",
+                            scale: { x: 3, y: 3 }
+                        };
+                        await OBR.scene.items.addItems([deathMark]);
+                    }
+                }
+            }
+        }
+        
+        isAiming = false;
+        aimBtn.innerText = "🎯 Iniciar Mira";
+        aimBtn.classList.remove('active');
+        targetedTokens = [];
+        updateTargetUI();
+        document.getElementById('baseDice').value = ''; 
+    });
+}
+
+function updateTargetUI() {
+    const list = document.getElementById('targetList');
+    list.innerHTML = targetedTokens.length ? targetedTokens.map(t => `• ${t.name}`).join('<br>') : "Nenhum alvo na mira.";
+}
+
+function rollDice(diceString) {
+    if(!diceString) return 0;
+    const parts = diceString.toLowerCase().split('d');
+    const qtd = parseInt(parts[0]) || 1;
+    const faces = parseInt(parts[1]) || 0;
+    if (faces === 0) return qtd; 
+    let total = 0;
+    for(let i=0; i<qtd; i++) total += Math.floor(Math.random() * faces) + 1;
+    return total;
+}
+
+// --- LOG E MOVIMENTO ---
+function logCombat(target, dmg, skill) {
+    const log = document.getElementById('combatLogContent');
+    const entry = document.createElement('div');
+    entry.className = 'log-entry';
+    entry.innerHTML = `<span style="color:var(--accent)">[SISTEMA]</span> <b style="color:white">${target}</b> sofreu <b style="color:var(--danger)">${dmg} de dano</b> de <i>${skill}</i>.`;
+    log.prepend(entry);
+    document.getElementById('combatLogOverlay').classList.remove('hidden');
+    if(log.children.length > 5) log.lastChild.remove();
+}
+
+function setupMovementTracker() {
+    OBR.player.onChange(async (player) => {
+        if(player.selection.length > 0) {
+            const items = await OBR.scene.items.getItems(player.selection);
+            items.forEach(i => originalPositions[i.id] = {x: i.x, y: i.y});
+        }
+    });
+
+    OBR.scene.items.onChange(async (items) => {
+        const limit = parseInt(document.getElementById('moveLimit').value) || 0;
+        if (limit === 0) return; 
+
+        const dpi = await OBR.scene.grid.getDpi(); 
+        const scale = await OBR.scene.grid.getScale(); 
+        
+        items.forEach(async item => {
+            if (originalPositions[item.id] && item.layer === "CHARACTER") {
+                const orig = originalPositions[item.id];
+                const distPx = Math.sqrt(Math.pow(item.x - orig.x, 2) + Math.pow(item.y - orig.y, 2));
+                const distFt = (distPx / dpi) * scale.parsed.multiplier;
+
+                if (distFt > limit) {
+                    await OBR.scene.items.updateItems([item.id], t => {
+                        t[0].x = orig.x;
+                        t[0].y = orig.y;
+                    });
+                }
+            }
         });
     });
 }
