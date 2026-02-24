@@ -2,12 +2,12 @@
   "name": "Fate System",
   "version": "1.0.0",
   "manifest_version": 1,
-  "description": "Sistema completo: HUD, Movimento, Runas e Log Visual Novel.",
-  "icon": "icon.svg",
+  "description": "Sistema de HUD, Movimento e Runas para RPG.",
+  "icon": "/Fate_Sytem/icon.svg",
   "action": {
     "title": "Fate System",
-    "icon": "icon.svg",
-    "popover": "index.html",
+    "icon": "/Fate_Sytem/icon.svg",
+    "popover": "/Fate_Sytem/index.html",
     "width": 450,
     "height": 650
   }
