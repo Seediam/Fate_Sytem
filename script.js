@@ -3,6 +3,9 @@ let isAiming = false;
 let targetedTokens = [];
 let originalPositions = {};
 
+// Ícone SVG embutido em Base64 (Nunca vai falhar)
+const MENU_ICON = "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Cpath d='M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5zm0 2.18l7 3.89v4.93c0 4.27-2.61 8.27-7 9.38-4.39-1.11-7-5.11-7-9.38V8.07l7-3.89z'/%3E%3C/svg%3E";
+
 OBR.onReady(() => {
     setupTabs();
     setupContextMenu(); 
@@ -11,13 +14,13 @@ OBR.onReady(() => {
     setupMovementTracker();
 });
 
-// CRIA O BOTÃO NO MENU DO TOKEN NO MAPA
+// CRIA O BOTÃO NO MENU DO TOKEN
 function setupContextMenu() {
     OBR.contextMenu.create({
         id: "com.fatesystem.add",
         icons: [{
-            icon: "/icon.svg", 
-            label: "Adicionar à Matriz (Fate)",
+            icon: MENU_ICON, 
+            label: "Add to Fate Matriz",
             filter: {
                 every: [{ key: "layer", value: "CHARACTER" }]
             }
@@ -64,7 +67,7 @@ async function renderTrackerList() {
     const items = await OBR.scene.items.getItems(item => item.layer === "CHARACTER" && item.metadata[FATE_ID]);
 
     if (items.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: #555; font-size: 12px; margin-top: 20px;">Nenhum personagem na Matriz.</p>';
+        container.innerHTML = '<p style="text-align: center; color: var(--text-muted); font-size: 12px; margin-top: 20px;">Nenhum personagem na Matriz.</p>';
         return;
     }
 
@@ -219,7 +222,7 @@ function setupSpells() {
                 updateVisualHUD(target.id, meta.hpAtual, meta.hpMax, meta.mpAtual, meta.mpMax);
                 
                 const log = document.getElementById('combatLogContent');
-                log.innerHTML = `<div class="log-entry"><b>${target.name}</b> sofreu <b style="color:var(--danger)">${totalDmg} dano</b> de <i>${skillName}</i>.</div>` + log.innerHTML;
+                log.innerHTML = `<div class="log-entry"><b style="color:var(--text-main)">${target.name}</b> sofreu <b style="color:var(--danger)">${totalDmg} dano</b> de <i>${skillName}</i>.</div>` + log.innerHTML;
                 document.getElementById('combatLogOverlay').classList.remove('hidden');
 
                 if(meta.hpAtual <= 0 && autoKill) {
