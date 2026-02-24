@@ -1,57 +1,63 @@
 :root {
-    --bg-dark: #121212;
-    --bg-panel: #1e1e24;
+    --bg-dark: #0a0a0c;
+    --bg-panel: #16161a;
     --accent: #9d4edd;
     --accent-hover: #7b2cbf;
     --text-main: #e0e0e0;
-    --danger: #ff4d4d;
-    --rune-force: #ff3333;
-    --rune-magic: #3388ff;
-    --border: #333;
+    --danger: #ff3333;
+    --magic: #3388ff;
+    --border: #2c2c35;
 }
 
-body {
-    background-color: var(--bg-dark);
-    color: var(--text-main);
-    font-family: 'Segoe UI', sans-serif;
-    margin: 0; padding: 15px;
-    box-sizing: border-box;
-}
-
+body { background-color: var(--bg-dark); color: var(--text-main); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 12px; box-sizing: border-box; }
 .tabs { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 15px; }
-.tab-btn { background: none; border: none; color: #888; padding: 10px; cursor: pointer; font-weight: bold; text-transform: uppercase; flex: 1; }
+.tab-btn { background: none; border: none; color: #666; padding: 10px; cursor: pointer; font-weight: bold; text-transform: uppercase; flex: 1; transition: 0.3s; }
+.tab-btn:hover { color: #aaa; }
 .tab-btn.active { color: var(--accent); border-bottom: 2px solid var(--accent); margin-bottom: -2px; }
 .tab-content { display: none; }
 .tab-content.active { display: block; animation: fadeIn 0.3s; }
 
-.panel { background: var(--bg-panel); padding: 10px; border-radius: 6px; margin-bottom: 15px; border: 1px solid var(--border); }
-label { display: block; margin-bottom: 5px; font-size: 13px; font-weight: bold; color: #aaa; }
-input, select, textarea { width: 100%; padding: 8px; margin-bottom: 10px; background: #121212; border: 1px solid var(--border); color: white; border-radius: 4px; box-sizing: border-box; }
-input:focus, textarea:focus { outline: none; border-color: var(--accent); }
+.panel { background: var(--bg-panel); padding: 12px; border-radius: 6px; margin-bottom: 12px; border: 1px solid var(--border); }
+label { display: block; margin-bottom: 6px; font-size: 12px; font-weight: bold; color: #999; text-transform: uppercase; }
+input, select, textarea { width: 100%; padding: 8px; margin-bottom: 10px; background: #0f0f13; border: 1px solid var(--border); color: white; border-radius: 4px; box-sizing: border-box; font-family: monospace; font-size: 14px; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
 
-button { width: 100%; padding: 10px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; margin-bottom: 10px; color: white; }
-.primary-btn { background: var(--accent); }
-.primary-btn:hover { background: var(--accent-hover); }
-.secondary-btn { background: #444; }
+button { width: 100%; padding: 10px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; text-transform: uppercase; color: white; transition: 0.2s; }
 .danger-btn { background: var(--danger); }
-.aim-button { background: #28a745; }
+.danger-btn:hover { background: #cc0000; }
+.aim-button { background: #28a745; margin-bottom: 10px; }
 .aim-button.active { background: var(--danger); }
 
-.token-name { color: var(--accent); text-align: center; margin-top: 0; }
-.target-list { font-size: 13px; color: var(--danger); margin-bottom: 10px; padding: 10px; background: #1a1a1a; border-radius: 4px; }
+/* Matriz - Tracker com Inputs Separados */
+.tracker-list { display: flex; flex-direction: column; gap: 8px; }
+.tracker-item { display: flex; align-items: center; background: #1a1a20; padding: 8px; border-radius: 6px; border-left: 3px solid var(--accent); gap: 10px; }
+.tracker-img { width: 45px; height: 45px; border-radius: 4px; object-fit: cover; border: 1px solid #333; }
+.tracker-info { display: flex; flex-direction: column; flex-grow: 1; gap: 4px; }
+.tracker-name { font-size: 13px; font-weight: bold; color: white; margin-bottom: 2px; }
 
-.rune-slot { display: flex; gap: 10px; }
-.rune-slot select { flex: 2; }
-.rune-slot input { flex: 1; }
-.checkbox-label { display: flex; align-items: center; gap: 10px; cursor: pointer; margin-bottom: 10px; }
+.stats-row { display: flex; align-items: center; gap: 5px; }
+.stat-label { font-size: 11px; color: #888; font-weight: bold; width: 20px; }
+.stat-input { margin: 0 !important; padding: 4px !important; font-size: 12px !important; width: 45px !important; text-align: center; }
+.stat-divider { color: #666; font-weight: bold; }
 
-/* Visual Novel Log */
+.remove-btn { background: transparent; color: #888; border: 1px solid #444; width: 30px; padding: 5px; margin: 0; }
+.remove-btn:hover { background: var(--danger); color: white; border-color: var(--danger); }
+
+/* Spells & Log */
+.target-list { font-size: 13px; color: var(--danger); margin-bottom: 12px; padding: 8px; background: #111; border: 1px dashed var(--danger); border-radius: 4px; }
+.rune-slot { display: flex; gap: 8px; margin-bottom: 5px; }
+.rune-select { flex: 2; margin-bottom: 0; }
+.rune-slot input { flex: 1; margin-bottom: 0; }
+
 .log-overlay { position: fixed; bottom: 10px; left: 10px; right: 10px; z-index: 100; }
 .log-overlay.hidden { display: none; }
-.log-box { background: rgba(15, 15, 20, 0.95); border: 1px solid var(--accent); border-top: 3px solid var(--accent); border-radius: 6px; padding: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.8); backdrop-filter: blur(5px); }
+.log-box { background: rgba(20,20,25,0.95); border: 1px solid #333; border-top: 3px solid var(--accent); border-radius: 4px; padding: 12px; }
 .log-header { display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 5px; margin-bottom: 10px; }
-.log-title { color: var(--accent); font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
-.close-btn { background: none; width: auto; color: #888; font-size: 20px; padding: 0; margin: 0; }
-.log-entry { font-size: 14px; margin-bottom: 8px; border-left: 3px solid var(--accent); padding-left: 10px; line-height: 1.4; }
+.log-title { color: var(--accent); font-weight: bold; font-size: 12px; }
+.close-btn { background: none; width: auto; color: #666; font-size: 18px; padding: 0; margin: 0; }
+.log-entry { font-size: 14px; margin-bottom: 8px; border-left: 2px solid var(--danger); padding-left: 10px; }
 
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.checkbox-label { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 13px; color: #aaa; margin-bottom: 10px; }
+.checkbox-label input { width: auto; margin: 0; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
