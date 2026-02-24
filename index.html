@@ -1,64 +1,10 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fate System</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://unpkg.com/@owlbear-rodeo/sdk@latest/lib/index.umd.js"></script>
-</head>
-<body>
-    <div class="tabs">
-        <button class="tab-btn active" data-tab="matriz">Matriz</button>
-        <button class="tab-btn" data-tab="spells">Spells</button>
-        <button class="tab-btn" data-tab="config">Config</button>
-    </div>
-
-    <div id="matriz" class="tab-content active">
-        <h3>Controle de Token</h3>
-        <button id="registerTokenBtn">Registrar Token Selecionado</button>
-        
-        <div class="movement-settings">
-            <label for="moveLimit">Limite de Movimento (Ft.) - 0 = Livre:</label>
-            <input type="number" id="moveLimit" value="0">
-        </div>
-
-        <div id="hudControls" class="hud-controls">
-            <p>Selecione um token para editar HP/Mana.</p>
-        </div>
-    </div>
-
-    <div id="spells" class="tab-content">
-        <h3>Grimório de Habilidades</h3>
-        <button id="aimBtn" class="aim-button">🎯 Mirar Alvos</button>
-        <span id="targetCount">0 Alvos Selecionados</span>
-        
-        <div class="spell-builder">
-            <input type="text" placeholder="Nome da Habilidade..." id="spellName">
-            <input type="text" placeholder="Dado Base (ex: 3d6)" id="baseDice">
-            
-            <div class="runes-container">
-                <p>Runas (Até 3):</p>
+<div id="combatLogOverlay" class="log-overlay hidden">
+        <div class="log-box">
+            <div class="log-header">
+                <span class="log-title">Registro de Causalidade</span>
+                <button id="closeLogBtn" class="close-btn">&times;</button>
+            </div>
+            <div id="combatLogContent" class="log-content">
                 </div>
-            
-            <textarea placeholder="Descrição e efeitos adicionais..." id="spellDesc"></textarea>
-            <button id="castSpellBtn">Conjurar e Aplicar Dano</button>
         </div>
     </div>
-
-    <div id="config" class="tab-content">
-        <h3>Configurações do Sistema</h3>
-        <label>
-            <input type="checkbox" id="autoKillToggle" checked>
-            Desenhar "X" ao chegar a 0 HP
-        </label>
-        <br><br>
-        <label>
-            <input type="checkbox" id="gmOnlyHud">
-            HUD Visível Apenas para o GM
-        </label>
-    </div>
-
-    <script src="app.js"></script>
-</body>
-</html>
