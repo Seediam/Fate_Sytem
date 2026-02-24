@@ -7,7 +7,7 @@
   "action": {
     "title": "Fate System",
     "icon": "icon.svg",
-    "popover": "index.html",
+    "popover": "https://github.com/Seediam/Fate_Sytem/blob/main/index.html",
     "width": 400,
     "height": 600
   }
