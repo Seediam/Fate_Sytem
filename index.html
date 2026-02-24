@@ -28,27 +28,27 @@
         </div>
 
         <div id="tokenTrackerList" class="tracker-list">
-            <p style="text-align: center; color: #555; font-size: 12px; margin-top: 20px;">Use o botão direito no Token no mapa para adicioná-lo à Matriz.</p>
+            <p style="text-align: center; color: var(--text-muted); font-size: 12px; margin-top: 20px;">Use o botão no Token no mapa para adicioná-lo à Matriz.</p>
         </div>
     </div>
 
     <div id="spells" class="tab-content">
         <button id="aimBtn" class="aim-button">🎯 Iniciar Mira</button>
-        <div id="targetList" class="target-list">Nenhum alvo na mira.</div>
+        <div id="targetList" class="target-list" style="margin-bottom: 10px; font-size: 13px; color: var(--danger);">Nenhum alvo na mira.</div>
         
         <div class="spell-builder">
             <input type="text" id="spellName" placeholder="Nome da Habilidade">
             <input type="text" id="baseDice" placeholder="Dado Base (ex: 3d6)">
             
             <div class="runes-section">
-                <p class="rune-title">Runas (Opcional):</p>
-                <div class="rune-slot">
-                    <select id="rune1Type" class="rune-select"><option value="none">Nenhuma</option><option value="force">Força δ</option><option value="magic">Magia α</option></select>
-                    <input type="text" id="rune1Dice" placeholder="1d4">
+                <p style="font-size: 12px; color: var(--text-muted); font-weight: bold; margin-bottom: 5px;">Runas (Opcional):</p>
+                <div class="rune-slot" style="display: flex; gap: 8px;">
+                    <select id="rune1Type" style="flex: 2;"><option value="none">Nenhuma</option><option value="force">Força δ</option><option value="magic">Magia α</option></select>
+                    <input type="text" id="rune1Dice" placeholder="1d4" style="flex: 1;">
                 </div>
-                <div class="rune-slot">
-                    <select id="rune2Type" class="rune-select"><option value="none">Nenhuma</option><option value="force">Força δ</option><option value="magic">Magia α</option></select>
-                    <input type="text" id="rune2Dice" placeholder="1d4">
+                <div class="rune-slot" style="display: flex; gap: 8px;">
+                    <select id="rune2Type" style="flex: 2;"><option value="none">Nenhuma</option><option value="force">Força δ</option><option value="magic">Magia α</option></select>
+                    <input type="text" id="rune2Dice" placeholder="1d4" style="flex: 1;">
                 </div>
             </div>
             
@@ -63,7 +63,7 @@
 
     <div id="combatLogOverlay" class="log-overlay hidden">
         <div class="log-box">
-            <div class="log-header">
+            <div class="log-header" style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 5px;">
                 <span class="log-title">Registro de Causalidade</span>
                 <button id="closeLogBtn" class="close-btn">&times;</button>
             </div>
