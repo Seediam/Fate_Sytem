@@ -1,14 +1,14 @@
 {
   "name": "Fate System",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "manifest_version": 1,
-  "description": "Sistema de HUD, Movimento e Runas para RPG.",
-  "icon": "/Fate_Sytem/icon.svg",
+  "description": "Sistema HUD e Matriz",
+  "icon": "icon.svg",
   "action": {
     "title": "Fate System",
-    "icon": "/Fate_Sytem/icon.svg",
-    "popover": "/Fate_Sytem/index.html",
-    "width": 450,
-    "height": 650
+    "icon": "icon.svg",
+    "popover": "index.html",
+    "width": 400,
+    "height": 600
   }
 }
