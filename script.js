@@ -1,36 +1,30 @@
 const FATE_ID = "com.fatesystem.metadata";
 
+// O seu Grimório com a letra M codificado de forma 100% segura para o Owlbear não bloquear
+const rawSVG = `<svg width="64" height="64" viewBox="0 0 64 64" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><rect x="8" y="6" width="48" height="52" rx="4" /><line x1="18" y1="6" x2="18" y2="58" /><line x1="8" y1="16" x2="18" y2="16" /><line x1="8" y1="48" x2="18" y2="48" /><polyline points="26,42 26,24 36,34 46,24 46,42" /></svg>`;
+const MENU_ICON = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(rawSVG);
+
 let originalPositions = {};
 
 OBR.onReady(() => {
-    // A ORDEM AQUI É CRUCIAL! 
-    // Ligamos a aba de turnos e o botão '+' PRIMEIRO.
     setupTabs();
-    setupTurnos();          
+    setupTurnos();
     setupMovementTracker();
-    
-    // Deixamos o Menu por último dentro de um escudo. 
-    // Se ele falhar, o botão '+' continua funcionando!
-    try {
-        setupContextMenu(); 
-    } catch (e) {
-        console.error("Fate System: Erro ao carregar o menu flutuante.", e);
-    }
+    setupContextMenu(); 
 });
 
-// === 1. CRIAR MENU NO TOKEN ===
+// === 1. MENU DE CONTEXTO (Agora funciona em QUALQUER token) ===
 function setupContextMenu() {
     OBR.contextMenu.create({
-        id: "com.fatesystem.matriz.add", 
+        id: "seediam.fatesystem.menu.add", // ID Novo para fugir do cache
         icons: [{
-            icon: "icon.svg", // Caminho local igual ao Owl Trackers (Evita bloqueio de CORS)
+            icon: MENU_ICON, 
             label: "Adicionar à Matriz (Fate)",
             filter: {
-                every: [{ key: "layer", value: "CHARACTER" }]
+                every: [{ key: "type", value: "IMAGE" }] // <- O SEGREDO: Funciona em Prop, Mount, Character, qualquer imagem!
             }
         }],
         onClick: async (context) => {
-            // Mapeia extraindo APENAS os IDs dos tokens, como o Owl Trackers faz
             const tokenIds = context.items.map(item => item.id);
             
             await OBR.scene.items.updateItems(tokenIds, (tokens) => {
@@ -45,38 +39,25 @@ function setupContextMenu() {
     });
 }
 
-// === 2. LIGAR O BOTÃO DE "+" (PLANO DE EMERGÊNCIA) ===
+// === 2. BOTÃO DE "+" DE EMERGÊNCIA (Agora aceita qualquer seleção) ===
 function setupTurnos() {
     document.getElementById('fallbackAddBtn').addEventListener('click', async () => {
-        try {
-            const selectionIds = await OBR.player.getSelection();
-            
-            if (!selectionIds || selectionIds.length === 0) {
-                alert("Selecione um personagem no mapa primeiro!");
-                return;
-            }
-
-            // Pega os itens reais para garantir que é um Character
-            const items = await OBR.scene.items.getItems(selectionIds);
-            const characterIds = items.filter(i => i.layer === "CHARACTER").map(i => i.id);
-
-            if (characterIds.length === 0) {
-                alert("Apenas tokens na camada 'Personagem' (Character) podem ser adicionados!");
-                return;
-            }
-
-            await OBR.scene.items.updateItems(characterIds, (tokens) => {
-                tokens.forEach(t => {
-                    // Se não tiver os dados do Fate, a gente cria
-                    if (!t.metadata[FATE_ID]) {
-                        t.metadata[FATE_ID] = { hpAtual: 100, hpMax: 100, mpAtual: 50, mpMax: 50, movimento: 0 };
-                    }
-                });
-            });
-            renderTrackerList();
-        } catch (error) {
-            console.error("Erro no botão +: ", error);
+        const selectionIds = await OBR.player.getSelection();
+        
+        if (!selectionIds || selectionIds.length === 0) {
+            alert("Selecione um token no mapa primeiro!");
+            return;
         }
+
+        // Ignoramos a checagem de "CHARACTER". Se está selecionado, ele entra na Matriz.
+        await OBR.scene.items.updateItems(selectionIds, (tokens) => {
+            tokens.forEach(t => {
+                if (!t.metadata[FATE_ID]) {
+                    t.metadata[FATE_ID] = { hpAtual: 100, hpMax: 100, mpAtual: 50, mpMax: 50, movimento: 0 };
+                }
+            });
+        });
+        renderTrackerList();
     });
 
     OBR.scene.items.onChange(() => {
@@ -130,7 +111,7 @@ async function renderTrackerList() {
     attachMatrizEvents();
 }
 
-// === 4. MATEMÁTICA DOS INPUTS E BOTÃO DE REMOVER ===
+// === 4. MATEMÁTICA E ATUALIZAÇÕES ===
 function attachMatrizEvents() {
     document.querySelectorAll('.stat-input, .ft-input').forEach(input => {
         input.addEventListener('keypress', async (e) => {
@@ -181,7 +162,7 @@ function attachMatrizEvents() {
     });
 }
 
-// === 5. SISTEMA DE BLOQUEIO DE MOVIMENTO ===
+// === 5. BLOQUEIO DE MOVIMENTO ===
 function setupMovementTracker() {
     OBR.player.onChange(async (player) => {
         if(player.selection.length > 0) {
@@ -197,7 +178,6 @@ function setupMovementTracker() {
         items.forEach(async item => {
             if (item.metadata[FATE_ID] && originalPositions[item.id]) {
                 const limit = parseInt(item.metadata[FATE_ID].movimento) || 0;
-                
                 if (limit === 0) return; 
 
                 const orig = originalPositions[item.id];
