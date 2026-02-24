@@ -5,18 +5,18 @@ let originalPositions = {};
 
 OBR.onReady(() => {
     setupTabs();
-    setupContextMenu(); // NOVO: Cria o botão no menu do token
+    setupContextMenu(); 
     setupMatriz();
     setupSpells();
     setupMovementTracker();
 });
 
-// --- MENU DE CONTEXTO (Igual ao Owl Trackers) ---
+// CRIA O BOTÃO NO MENU DO TOKEN NO MAPA
 function setupContextMenu() {
     OBR.contextMenu.create({
-        id: "com.fatesystem.bind",
+        id: "com.fatesystem.add",
         icons: [{
-            icon: "icon.svg", // O Owlbear vai puxar o ícone da sua pasta
+            icon: "/icon.svg", 
             label: "Adicionar à Matriz (Fate)",
             filter: {
                 every: [{ key: "layer", value: "CHARACTER" }]
@@ -26,19 +26,16 @@ function setupContextMenu() {
             const items = context.items;
             await OBR.scene.items.updateItems(items, (tokens) => {
                 tokens.forEach(t => {
-                    // Estrutura nova, separando atual e máximo
                     if (!t.metadata[FATE_ID]) {
                         t.metadata[FATE_ID] = { hpAtual: 100, hpMax: 100, mpAtual: 50, mpMax: 50 };
                     }
                 });
             });
-            OBR.notification.show("Token adicionado à Matriz!");
-            renderTrackerList(); // Atualiza a aba principal
+            renderTrackerList();
         }
     });
 }
 
-// --- CONTROLE DE ABAS ---
 function setupTabs() {
     const btns = document.querySelectorAll('.tab-btn');
     const contents = document.querySelectorAll('.tab-content');
@@ -53,54 +50,44 @@ function setupTabs() {
     });
 }
 
-// --- SISTEMA DA MATRIZ (Tempo Real) ---
 function setupMatriz() {
     OBR.scene.items.onChange(() => {
-        setTimeout(renderTrackerList, 100); 
+        setTimeout(renderTrackerList, 150); 
     });
     renderTrackerList();
 }
 
 async function renderTrackerList() {
-    // Evita recarregar a lista se o usuário estiver digitando
-    if (document.activeElement && document.activeElement.classList.contains('stat-input')) {
-        return; 
-    }
+    if (document.activeElement && document.activeElement.classList.contains('stat-input')) return; 
 
     const container = document.getElementById('tokenTrackerList');
     const items = await OBR.scene.items.getItems(item => item.layer === "CHARACTER" && item.metadata[FATE_ID]);
 
     if (items.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: #888; font-size: 12px;">Nenhum token na Matriz.</p>';
+        container.innerHTML = '<p style="text-align: center; color: #555; font-size: 12px; margin-top: 20px;">Nenhum personagem na Matriz.</p>';
         return;
     }
 
     let html = '';
     items.forEach(item => {
         const meta = item.metadata[FATE_ID];
-        const img = item.image ? item.image.url : '';
         html += `
             <div class="tracker-item" id="tracker-${item.id}">
-                <img src="${img}" class="tracker-img">
-                <div class="tracker-info">
-                    <div class="tracker-name">${item.name || "Desconhecido"}</div>
-                    
-                    <div class="stats-row">
-                        <span class="stat-label" style="color:var(--danger)">HP</span>
-                        <input type="text" value="${meta.hpAtual}" class="stat-input hp-atual" data-id="${item.id}" title="Digite -X para dano">
-                        <span class="stat-divider">/</span>
-                        <input type="text" value="${meta.hpMax}" class="stat-input hp-max" data-id="${item.id}">
-                    </div>
-                    
-                    <div class="stats-row">
-                        <span class="stat-label" style="color:var(--magic)">MP</span>
-                        <input type="text" value="${meta.mpAtual}" class="stat-input mp-atual" data-id="${item.id}">
-                        <span class="stat-divider">/</span>
-                        <input type="text" value="${meta.mpMax}" class="stat-input mp-max" data-id="${item.id}">
-                    </div>
-
+                <div class="tracker-name" title="${item.name}">${item.name || "Desconhecido"}</div>
+                
+                <div class="stats-group" title="HP">
+                    <input type="text" value="${meta.hpAtual}" class="stat-input hp-atual" data-id="${item.id}">
+                    <span class="stat-div">/</span>
+                    <input type="text" value="${meta.hpMax}" class="stat-input hp-max" data-id="${item.id}">
                 </div>
-                <button class="remove-btn" data-id="${item.id}" title="Remover">X</button>
+                
+                <div class="stats-group" title="Mana">
+                    <input type="text" value="${meta.mpAtual}" class="stat-input mp-atual" data-id="${item.id}">
+                    <span class="stat-div">/</span>
+                    <input type="text" value="${meta.mpMax}" class="stat-input mp-max" data-id="${item.id}">
+                </div>
+
+                <button class="remove-btn" data-id="${item.id}" title="Remover da Matriz">✖</button>
             </div>
         `;
     });
@@ -110,7 +97,6 @@ async function renderTrackerList() {
 }
 
 function attachMatrizEvents() {
-    // Escuta o "Enter" em qualquer um dos 4 inputs (HP Atual, HP Max, MP Atual, MP Max)
     document.querySelectorAll('.stat-input').forEach(input => {
         input.addEventListener('keypress', async (e) => {
             if (e.key === 'Enter') {
@@ -125,19 +111,17 @@ function attachMatrizEvents() {
                 const tokens = await OBR.scene.items.getItems([tokenId]);
                 let meta = tokens[0].metadata[FATE_ID];
 
-                // Lógica de cálculo matemático (ex: se digitar "-30" no HP atual)
                 if (val.startsWith('-') || val.startsWith('+')) {
                     let modifier = parseInt(val);
                     if (isHpAtual) val = meta.hpAtual + modifier;
                     if (isHpMax) val = meta.hpMax + modifier;
                     if (isMpAtual) val = meta.mpAtual + modifier;
                     if (isMpMax) val = meta.mpMax + modifier;
-                    e.target.value = val; // Atualiza o input visualmente
+                    e.target.value = val; 
                 } else {
-                    val = parseInt(val) || 0; // Garante que seja um número
+                    val = parseInt(val) || 0; 
                 }
 
-                // Salva a nova informação nos metadados
                 await OBR.scene.items.updateItems([tokenId], (t) => {
                     if (isHpAtual) t[0].metadata[FATE_ID].hpAtual = val;
                     if (isHpMax) t[0].metadata[FATE_ID].hpMax = val;
@@ -145,7 +129,6 @@ function attachMatrizEvents() {
                     if (isMpMax) t[0].metadata[FATE_ID].mpMax = val;
                 });
                 
-                // Recarrega as variáveis para o HUD visual
                 const updatedMeta = (await OBR.scene.items.getItems([tokenId]))[0].metadata[FATE_ID];
                 updateVisualHUD(tokenId, updatedMeta.hpAtual, updatedMeta.hpMax, updatedMeta.mpAtual, updatedMeta.mpMax);
                 e.target.blur(); 
@@ -153,7 +136,6 @@ function attachMatrizEvents() {
         });
     });
 
-    // Botão de remover
     document.querySelectorAll('.remove-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             const tokenId = e.target.dataset.id;
@@ -169,7 +151,7 @@ async function updateVisualHUD(tokenId, hpAtual, hpMax, mpAtual, mpMax) {
     const existing = await OBR.scene.items.getItems([textId]);
     const isGmOnly = document.getElementById('gmOnlyHudToggle').checked;
     const role = await OBR.player.getRole();
-    const textContent = `HP: ${hpAtual}/${hpMax} | MP: ${mpAtual}/${mpMax}`;
+    const textContent = `HP ${hpAtual}/${hpMax} | MP ${mpAtual}/${mpMax}`;
 
     if (existing.length > 0) {
         await OBR.scene.items.updateItems([textId], items => {
@@ -180,21 +162,16 @@ async function updateVisualHUD(tokenId, hpAtual, hpMax, mpAtual, mpMax) {
         const parent = await OBR.scene.items.getItems([tokenId]);
         if(parent.length === 0) return;
         const textItem = {
-            id: textId,
-            type: "TEXT",
+            id: textId, type: "TEXT",
             text: { type: "PLAIN", plainText: textContent },
-            x: parent[0].x,
-            y: parent[0].y + (parent[0].image ? parent[0].image.height / 2 : 50),
-            attachedTo: tokenId,
-            locked: true,
-            layer: "TEXT",
+            x: parent[0].x, y: parent[0].y + (parent[0].image ? parent[0].image.height / 2 : 50),
+            attachedTo: tokenId, locked: true, layer: "TEXT",
             visible: isGmOnly ? (role === "GM") : true
         };
         await OBR.scene.local.addItems([textItem]); 
     }
 }
 
-// --- SISTEMA DE SPELLS E MIRA ---
 function setupSpells() {
     const aimBtn = document.getElementById('aimBtn');
     
@@ -203,7 +180,7 @@ function setupSpells() {
         aimBtn.innerText = isAiming ? "🛑 Parar Mira" : "🎯 Iniciar Mira";
         aimBtn.classList.toggle('active', isAiming);
         if(isAiming) targetedTokens = [];
-        updateTargetUI();
+        document.getElementById('targetList').innerHTML = "Nenhum alvo na mira.";
     });
 
     OBR.player.onChange(async (player) => {
@@ -214,7 +191,7 @@ function setupSpells() {
                     targetedTokens.push({ id: item.id, name: item.name || "Alvo" });
                 }
             });
-            updateTargetUI();
+            document.getElementById('targetList').innerHTML = targetedTokens.map(t => `• ${t.name}`).join('<br>');
             OBR.player.deselect(); 
         }
     });
@@ -222,61 +199,46 @@ function setupSpells() {
     document.getElementById('castSpellBtn').addEventListener('click', async () => {
         if (targetedTokens.length === 0) return alert("Mire em pelo menos um alvo!");
         
-        const skillName = document.getElementById('spellName').value || "Habilidade Desconhecida";
+        const skillName = document.getElementById('spellName').value || "Ataque";
         let totalDmg = rollDice(document.getElementById('baseDice').value);
         
-        for(let i=1; i<=3; i++) {
+        for(let i=1; i<=2; i++) {
             const type = document.getElementById(`rune${i}Type`).value;
-            if(type !== "none") {
-                totalDmg += rollDice(document.getElementById(`rune${i}Dice`).value);
-            }
+            if(type !== "none") totalDmg += rollDice(document.getElementById(`rune${i}Dice`).value);
         }
 
         const autoKill = document.getElementById('autoKillToggle').checked;
 
         for (const target of targetedTokens) {
             const items = await OBR.scene.items.getItems([target.id]);
-            if(items.length > 0) {
-                let meta = items[0].metadata[FATE_ID] || { hpAtual: 0, hpMax: 0, mpAtual: 0, mpMax: 0 };
-                
-                // Aplica o dano no HP atual
+            if(items.length > 0 && items[0].metadata[FATE_ID]) {
+                let meta = items[0].metadata[FATE_ID];
                 meta.hpAtual -= totalDmg;
                 
                 await OBR.scene.items.updateItems([target.id], t => t[0].metadata[FATE_ID].hpAtual = meta.hpAtual);
                 updateVisualHUD(target.id, meta.hpAtual, meta.hpMax, meta.mpAtual, meta.mpMax);
-                logCombat(target.name, totalDmg, skillName);
+                
+                const log = document.getElementById('combatLogContent');
+                log.innerHTML = `<div class="log-entry"><b>${target.name}</b> sofreu <b style="color:var(--danger)">${totalDmg} dano</b> de <i>${skillName}</i>.</div>` + log.innerHTML;
+                document.getElementById('combatLogOverlay').classList.remove('hidden');
 
                 if(meta.hpAtual <= 0 && autoKill) {
                     const deathId = `${target.id}-death`;
                     const existingDeath = await OBR.scene.items.getItems([deathId]);
                     if(existingDeath.length === 0) {
-                        const deathMark = {
-                            id: deathId,
-                            type: "TEXT",
-                            text: { type: "PLAIN", plainText: "❌" },
-                            x: items[0].x, y: items[0].y,
-                            attachedTo: target.id,
-                            locked: true, layer: "DRAWING",
-                            scale: { x: 3, y: 3 }
-                        };
-                        await OBR.scene.items.addItems([deathMark]);
+                        await OBR.scene.items.addItems([{
+                            id: deathId, type: "TEXT", text: { type: "PLAIN", plainText: "❌" },
+                            x: items[0].x, y: items[0].y, attachedTo: target.id,
+                            locked: true, layer: "DRAWING", scale: { x: 3, y: 3 }
+                        }]);
                     }
                 }
             }
         }
         
-        isAiming = false;
-        aimBtn.innerText = "🎯 Iniciar Mira";
-        aimBtn.classList.remove('active');
-        targetedTokens = [];
-        updateTargetUI();
-        document.getElementById('baseDice').value = ''; 
+        isAiming = false; aimBtn.innerText = "🎯 Iniciar Mira"; aimBtn.classList.remove('active');
+        targetedTokens = []; document.getElementById('targetList').innerHTML = "Nenhum alvo na mira.";
     });
-}
-
-function updateTargetUI() {
-    const list = document.getElementById('targetList');
-    list.innerHTML = targetedTokens.length ? targetedTokens.map(t => `• ${t.name}`).join('<br>') : "Nenhum alvo na mira.";
 }
 
 function rollDice(diceString) {
@@ -290,17 +252,6 @@ function rollDice(diceString) {
     return total;
 }
 
-// --- LOG E MOVIMENTO ---
-function logCombat(target, dmg, skill) {
-    const log = document.getElementById('combatLogContent');
-    const entry = document.createElement('div');
-    entry.className = 'log-entry';
-    entry.innerHTML = `<span style="color:var(--accent)">[SISTEMA]</span> <b style="color:white">${target}</b> sofreu <b style="color:var(--danger)">${dmg} de dano</b> de <i>${skill}</i>.`;
-    log.prepend(entry);
-    document.getElementById('combatLogOverlay').classList.remove('hidden');
-    if(log.children.length > 5) log.lastChild.remove();
-}
-
 function setupMovementTracker() {
     OBR.player.onChange(async (player) => {
         if(player.selection.length > 0) {
@@ -312,7 +263,6 @@ function setupMovementTracker() {
     OBR.scene.items.onChange(async (items) => {
         const limit = parseInt(document.getElementById('moveLimit').value) || 0;
         if (limit === 0) return; 
-
         const dpi = await OBR.scene.grid.getDpi(); 
         const scale = await OBR.scene.grid.getScale(); 
         
@@ -323,10 +273,7 @@ function setupMovementTracker() {
                 const distFt = (distPx / dpi) * scale.parsed.multiplier;
 
                 if (distFt > limit) {
-                    await OBR.scene.items.updateItems([item.id], t => {
-                        t[0].x = orig.x;
-                        t[0].y = orig.y;
-                    });
+                    await OBR.scene.items.updateItems([item.id], t => { t[0].x = orig.x; t[0].y = orig.y; });
                 }
             }
         });
