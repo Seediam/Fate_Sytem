@@ -15,17 +15,20 @@
     </div>
 
     <div id="matriz" class="tab-content active">
-        <p style="font-size: 11px; color: #888; text-align: center; margin-top: 0;">
-            Dica: Para adicionar um token aqui, clique nele no mapa e use o ícone do Fate System no menu dele.
-        </p>
+        <div class="global-config">
+            <span class="global-label">Limite Global de Movimento (ft.) | 0 = Livre</span>
+            <input type="number" id="moveLimit" value="0" class="limit-input">
+        </div>
         
-        <div class="panel">
-            <label>Limite de Movimento (Ft.) | 0 = Livre</label>
-            <input type="number" id="moveLimit" value="0">
+        <div class="tracker-header">
+            <span>Personagem</span>
+            <span>HP</span>
+            <span>MP</span>
+            <span></span>
         </div>
 
         <div id="tokenTrackerList" class="tracker-list">
-            <p style="text-align: center; color: #888; font-size: 12px;">Nenhum token na Matriz.</p>
+            <p style="text-align: center; color: #555; font-size: 12px; margin-top: 20px;">Use o botão direito no Token no mapa para adicioná-lo à Matriz.</p>
         </div>
     </div>
 
@@ -33,54 +36,29 @@
         <button id="aimBtn" class="aim-button">🎯 Iniciar Mira</button>
         <div id="targetList" class="target-list">Nenhum alvo na mira.</div>
         
-        <div class="panel spell-builder">
+        <div class="spell-builder">
             <input type="text" id="spellName" placeholder="Nome da Habilidade">
             <input type="text" id="baseDice" placeholder="Dado Base (ex: 3d6)">
             
             <div class="runes-section">
-                <p style="color: #aaa; font-size: 12px; font-weight: bold; margin-bottom: 5px;">Runas (Opcional):</p>
+                <p class="rune-title">Runas (Opcional):</p>
                 <div class="rune-slot">
-                    <select id="rune1Type" class="rune-select">
-                        <option value="none">Nenhuma</option>
-                        <option value="force">Força δ (Vermelho)</option>
-                        <option value="magic">Magia α (Azul)</option>
-                    </select>
-                    <input type="text" id="rune1Dice" placeholder="Dado (ex: 1d4)">
+                    <select id="rune1Type" class="rune-select"><option value="none">Nenhuma</option><option value="force">Força δ</option><option value="magic">Magia α</option></select>
+                    <input type="text" id="rune1Dice" placeholder="1d4">
                 </div>
                 <div class="rune-slot">
-                    <select id="rune2Type" class="rune-select">
-                        <option value="none">Nenhuma</option>
-                        <option value="force">Força δ (Vermelho)</option>
-                        <option value="magic">Magia α (Azul)</option>
-                    </select>
-                    <input type="text" id="rune2Dice" placeholder="Dado (ex: 1d4)">
-                </div>
-                <div class="rune-slot">
-                    <select id="rune3Type" class="rune-select">
-                        <option value="none">Nenhuma</option>
-                        <option value="force">Força δ (Vermelho)</option>
-                        <option value="magic">Magia α (Azul)</option>
-                    </select>
-                    <input type="text" id="rune3Dice" placeholder="Dado (ex: 1d4)">
+                    <select id="rune2Type" class="rune-select"><option value="none">Nenhuma</option><option value="force">Força δ</option><option value="magic">Magia α</option></select>
+                    <input type="text" id="rune2Dice" placeholder="1d4">
                 </div>
             </div>
             
-            <textarea id="spellDesc" placeholder="Descrição/Efeitos da habilidade..."></textarea>
             <button id="castSpellBtn" class="danger-btn">Conjurar Habilidade</button>
         </div>
     </div>
 
     <div id="config" class="tab-content">
-        <div class="panel">
-            <label class="checkbox-label">
-                <input type="checkbox" id="autoKillToggle" checked>
-                Marcar com "❌" ao chegar a 0 HP
-            </label>
-            <label class="checkbox-label">
-                <input type="checkbox" id="gmOnlyHudToggle">
-                HUD no Mapa Visível Apenas para o Mestre
-            </label>
-        </div>
+        <label class="checkbox-label"><input type="checkbox" id="autoKillToggle" checked> Marcar "❌" ao chegar a 0 HP</label>
+        <label class="checkbox-label"><input type="checkbox" id="gmOnlyHudToggle"> HUD no mapa apenas para Mestre</label>
     </div>
 
     <div id="combatLogOverlay" class="log-overlay hidden">
