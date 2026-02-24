@@ -1,10 +1,15 @@
-<div id="combatLogOverlay" class="log-overlay hidden">
-        <div class="log-box">
-            <div class="log-header">
-                <span class="log-title">Registro de Causalidade</span>
-                <button id="closeLogBtn" class="close-btn">&times;</button>
-            </div>
-            <div id="combatLogContent" class="log-content">
+<div id="hudControls" class="hud-controls hidden">
+            <h4 id="activeTokenName" style="color: var(--accent);">Nenhum Token Selecionado</h4>
+            <div class="stat-box">
+                <label>HP (Digite -X ou +X e aperte Enter):</label>
+                <div style="display: flex; gap: 5px;">
+                    <input type="text" id="hpInput" placeholder="Ex: 100/100 ou -30">
                 </div>
+            </div>
+            <div class="stat-box">
+                <label>Mana:</label>
+                <div style="display: flex; gap: 5px;">
+                    <input type="text" id="manaInput" placeholder="Ex: 50/50 ou -10">
+                </div>
+            </div>
         </div>
-    </div>
