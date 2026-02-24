@@ -2,13 +2,13 @@
   "name": "Fate System",
   "version": "1.0.0",
   "manifest_version": 1,
-  "description": "Sistema avançado de combate, HUD, runas e controle de movimento.",
+  "description": "Sistema completo: HUD, Movimento, Runas e Log Visual Novel.",
   "icon": "/icon.svg",
   "action": {
     "title": "Fate System",
     "icon": "/icon.svg",
     "popover": "/",
-    "width": 400,
-    "height": 600
+    "width": 450,
+    "height": 650
   }
 }
