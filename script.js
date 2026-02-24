@@ -1,4 +1,5 @@
 const FATE_ID = "com.fatesystem.metadata";
+const MENU_ICON = "https://seediam.github.io/Fate_Sytem/icon.svg";
 
 let originalPositions = {};
 
@@ -9,74 +10,67 @@ OBR.onReady(() => {
     setupMovementTracker();
 });
 
-// === 1. CRIAR MENU NO TOKEN ===
+// === 1. CRIAR MENU NO TOKEN (NÚCLEO CORRIGIDO) ===
 function setupContextMenu() {
-    // Mudei o ID do botão para enganar o cache do Owlbear
     OBR.contextMenu.create({
-        id: "com.fatesystem.add.v3", 
+        id: "com.fatesystem.matriz.add", 
         icons: [{
-            icon: "https://seediam.github.io/Fate_Sytem/icon.svg", 
+            icon: MENU_ICON, 
             label: "Adicionar à Matriz (Fate)",
             filter: {
-                every: [{ key: "layer", value: "CHARACTER" }] // Filtro seguro padrao
+                every: [{ key: "layer", value: "CHARACTER" }] // Aparece apenas em tokens Character
             }
         }],
         onClick: async (context) => {
-            const items = context.items;
-            await OBR.scene.items.updateItems(items, (tokens) => {
+            // AQUI ESTAVA O ERRO! Precisamos extrair apenas os IDs dos tokens
+            const tokenIds = context.items.map(item => item.id);
+            
+            await OBR.scene.items.updateItems(tokenIds, (tokens) => {
                 tokens.forEach(t => {
                     if (!t.metadata[FATE_ID]) {
                         t.metadata[FATE_ID] = { hpAtual: 100, hpMax: 100, mpAtual: 50, mpMax: 50, movimento: 0 };
                     }
                 });
             });
-            renderTrackerList();
         }
     });
 }
 
-// === 2. ABAS ===
-function setupTabs() {
-    const btns = document.querySelectorAll('.tab-btn');
-    const contents = document.querySelectorAll('.tab-content');
-    btns.forEach(btn => btn.addEventListener('click', () => {
-        btns.forEach(b => b.classList.remove('active'));
-        contents.forEach(c => c.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById(btn.dataset.tab).classList.add('active');
-    }));
-}
-
-// === 3. RENDERIZAR E ATUALIZAR TOKENS ===
+// === 2. RENDERIZAR E ATUALIZAR TOKENS ===
 function setupTurnos() {
-    // PLANO B: Botão [+] na aba Turnos
+    // PLANO B: O Botão [+] na interface (agora corrigido usando IDs)
     document.getElementById('fallbackAddBtn').addEventListener('click', async () => {
-        const selection = await OBR.player.getSelection();
-        if (!selection || selection.length === 0) {
+        const selectionIds = await OBR.player.getSelection(); // Retorna direto os IDs
+        
+        if (!selectionIds || selectionIds.length === 0) {
             alert("Selecione um personagem no mapa primeiro!");
             return;
         }
-        const items = await OBR.scene.items.getItems(selection);
-        await OBR.scene.items.updateItems(items, (tokens) => {
+
+        await OBR.scene.items.updateItems(selectionIds, (tokens) => {
             tokens.forEach(t => {
                 if (!t.metadata[FATE_ID]) {
                     t.metadata[FATE_ID] = { hpAtual: 100, hpMax: 100, mpAtual: 50, mpMax: 50, movimento: 0 };
                 }
             });
         });
-        renderTrackerList();
     });
 
+    // Escuta mudanças nos tokens e atualiza a lista
     OBR.scene.items.onChange(() => {
         setTimeout(renderTrackerList, 150); 
     });
+    
+    // Renderiza assim que abrir
     renderTrackerList();
 }
 
 async function renderTrackerList() {
+    // Evita recarregar a lista e tirar o foco enquanto o usuário digita
     if (document.activeElement && (document.activeElement.classList.contains('stat-input') || document.activeElement.classList.contains('ft-input'))) return; 
 
     const container = document.getElementById('tokenTrackerList');
+    // Filtra apenas os tokens que têm os metadados do Fate System
     const items = await OBR.scene.items.getItems(item => item.metadata[FATE_ID] !== undefined);
 
     if (items.length === 0) {
@@ -103,7 +97,7 @@ async function renderTrackerList() {
                     <input type="text" value="${meta.mpMax}" class="stat-input mp-max" data-id="${item.id}">
                 </div>
 
-                <div class="ft-group" title="Movimento por Turno (Ft.) | 0 = Livre">
+                <div class="ft-group" title="Movimento (Ft.) | 0 = Livre">
                     <input type="text" value="${meta.movimento || 0}" class="ft-input" data-id="${item.id}">
                 </div>
 
@@ -160,13 +154,14 @@ function attachMatrizEvents() {
     document.querySelectorAll('.remove-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             const tokenId = e.target.dataset.id;
+            // Deleta os dados do nosso sistema de dentro do token, tirando-o da lista
             await OBR.scene.items.updateItems([tokenId], t => delete t[0].metadata[FATE_ID]);
             renderTrackerList();
         });
     });
 }
 
-// === 4. SISTEMA DE BLOQUEIO DE MOVIMENTO (INDIVIDUAL) ===
+// === 3. SISTEMA DE BLOQUEIO DE MOVIMENTO ===
 function setupMovementTracker() {
     OBR.player.onChange(async (player) => {
         if(player.selection.length > 0) {
@@ -198,4 +193,16 @@ function setupMovementTracker() {
             }
         });
     });
+}
+
+// === 4. ABAS (Apenas navegação, resto oculto por enquanto) ===
+function setupTabs() {
+    const btns = document.querySelectorAll('.tab-btn');
+    const contents = document.querySelectorAll('.tab-content');
+    btns.forEach(btn => btn.addEventListener('click', () => {
+        btns.forEach(b => b.classList.remove('active'));
+        contents.forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+    }));
 }
