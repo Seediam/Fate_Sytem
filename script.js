@@ -1,28 +1,36 @@
 const FATE_ID = "com.fatesystem.metadata";
-const MENU_ICON = "https://seediam.github.io/Fate_Sytem/icon.svg";
 
 let originalPositions = {};
 
 OBR.onReady(() => {
+    // A ORDEM AQUI É CRUCIAL! 
+    // Ligamos a aba de turnos e o botão '+' PRIMEIRO.
     setupTabs();
-    setupContextMenu(); 
-    setupTurnos();
+    setupTurnos();          
     setupMovementTracker();
+    
+    // Deixamos o Menu por último dentro de um escudo. 
+    // Se ele falhar, o botão '+' continua funcionando!
+    try {
+        setupContextMenu(); 
+    } catch (e) {
+        console.error("Fate System: Erro ao carregar o menu flutuante.", e);
+    }
 });
 
-// === 1. CRIAR MENU NO TOKEN (NÚCLEO CORRIGIDO) ===
+// === 1. CRIAR MENU NO TOKEN ===
 function setupContextMenu() {
     OBR.contextMenu.create({
         id: "com.fatesystem.matriz.add", 
         icons: [{
-            icon: MENU_ICON, 
+            icon: "icon.svg", // Caminho local igual ao Owl Trackers (Evita bloqueio de CORS)
             label: "Adicionar à Matriz (Fate)",
             filter: {
-                every: [{ key: "layer", value: "CHARACTER" }] // Aparece apenas em tokens Character
+                every: [{ key: "layer", value: "CHARACTER" }]
             }
         }],
         onClick: async (context) => {
-            // AQUI ESTAVA O ERRO! Precisamos extrair apenas os IDs dos tokens
+            // Mapeia extraindo APENAS os IDs dos tokens, como o Owl Trackers faz
             const tokenIds = context.items.map(item => item.id);
             
             await OBR.scene.items.updateItems(tokenIds, (tokens) => {
@@ -32,45 +40,57 @@ function setupContextMenu() {
                     }
                 });
             });
+            renderTrackerList();
         }
     });
 }
 
-// === 2. RENDERIZAR E ATUALIZAR TOKENS ===
+// === 2. LIGAR O BOTÃO DE "+" (PLANO DE EMERGÊNCIA) ===
 function setupTurnos() {
-    // PLANO B: O Botão [+] na interface (agora corrigido usando IDs)
     document.getElementById('fallbackAddBtn').addEventListener('click', async () => {
-        const selectionIds = await OBR.player.getSelection(); // Retorna direto os IDs
-        
-        if (!selectionIds || selectionIds.length === 0) {
-            alert("Selecione um personagem no mapa primeiro!");
-            return;
-        }
+        try {
+            const selectionIds = await OBR.player.getSelection();
+            
+            if (!selectionIds || selectionIds.length === 0) {
+                alert("Selecione um personagem no mapa primeiro!");
+                return;
+            }
 
-        await OBR.scene.items.updateItems(selectionIds, (tokens) => {
-            tokens.forEach(t => {
-                if (!t.metadata[FATE_ID]) {
-                    t.metadata[FATE_ID] = { hpAtual: 100, hpMax: 100, mpAtual: 50, mpMax: 50, movimento: 0 };
-                }
+            // Pega os itens reais para garantir que é um Character
+            const items = await OBR.scene.items.getItems(selectionIds);
+            const characterIds = items.filter(i => i.layer === "CHARACTER").map(i => i.id);
+
+            if (characterIds.length === 0) {
+                alert("Apenas tokens na camada 'Personagem' (Character) podem ser adicionados!");
+                return;
+            }
+
+            await OBR.scene.items.updateItems(characterIds, (tokens) => {
+                tokens.forEach(t => {
+                    // Se não tiver os dados do Fate, a gente cria
+                    if (!t.metadata[FATE_ID]) {
+                        t.metadata[FATE_ID] = { hpAtual: 100, hpMax: 100, mpAtual: 50, mpMax: 50, movimento: 0 };
+                    }
+                });
             });
-        });
+            renderTrackerList();
+        } catch (error) {
+            console.error("Erro no botão +: ", error);
+        }
     });
 
-    // Escuta mudanças nos tokens e atualiza a lista
     OBR.scene.items.onChange(() => {
         setTimeout(renderTrackerList, 150); 
     });
     
-    // Renderiza assim que abrir
     renderTrackerList();
 }
 
+// === 3. RENDERIZAR A LISTA ===
 async function renderTrackerList() {
-    // Evita recarregar a lista e tirar o foco enquanto o usuário digita
     if (document.activeElement && (document.activeElement.classList.contains('stat-input') || document.activeElement.classList.contains('ft-input'))) return; 
 
     const container = document.getElementById('tokenTrackerList');
-    // Filtra apenas os tokens que têm os metadados do Fate System
     const items = await OBR.scene.items.getItems(item => item.metadata[FATE_ID] !== undefined);
 
     if (items.length === 0) {
@@ -110,6 +130,7 @@ async function renderTrackerList() {
     attachMatrizEvents();
 }
 
+// === 4. MATEMÁTICA DOS INPUTS E BOTÃO DE REMOVER ===
 function attachMatrizEvents() {
     document.querySelectorAll('.stat-input, .ft-input').forEach(input => {
         input.addEventListener('keypress', async (e) => {
@@ -154,14 +175,13 @@ function attachMatrizEvents() {
     document.querySelectorAll('.remove-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             const tokenId = e.target.dataset.id;
-            // Deleta os dados do nosso sistema de dentro do token, tirando-o da lista
             await OBR.scene.items.updateItems([tokenId], t => delete t[0].metadata[FATE_ID]);
             renderTrackerList();
         });
     });
 }
 
-// === 3. SISTEMA DE BLOQUEIO DE MOVIMENTO ===
+// === 5. SISTEMA DE BLOQUEIO DE MOVIMENTO ===
 function setupMovementTracker() {
     OBR.player.onChange(async (player) => {
         if(player.selection.length > 0) {
@@ -195,7 +215,7 @@ function setupMovementTracker() {
     });
 }
 
-// === 4. ABAS (Apenas navegação, resto oculto por enquanto) ===
+// === 6. ABAS ===
 function setupTabs() {
     const btns = document.querySelectorAll('.tab-btn');
     const contents = document.querySelectorAll('.tab-content');
